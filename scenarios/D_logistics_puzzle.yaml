@@ -1,0 +1,58 @@
+id: D_logistics_puzzle
+title: The logistics puzzle
+layer: 3-cross-reference
+description: >
+  A fixed meeting (Wednesday 2pm, Paris) is stated in turn 1. After heavy research on
+  both cities, the user asks when to take the Paris to Amsterdam train. The agent must
+  connect the meeting from turn 1 with the train timetable from the final turn.
+
+turns:
+  - user: "I'm planning 6 days: 3 in Paris, 3 in Amsterdam. I have a meeting in Paris on Wednesday at 2pm near the Eiffel Tower."
+    reply: "Got it: 3 days in Paris, then 3 in Amsterdam, with a fixed meeting on Wednesday at 2pm near the Eiffel Tower. Where are you flying from?"
+  - user: "Flying from New York, arriving in Paris on Monday morning. Find flights."
+    tools: [{tool: web_search, args: {query: "flights from New York to Paris"}}]
+  - user: "And the flight home from Amsterdam to New York?"
+    tools: [{tool: web_search, args: {query: "flights from Amsterdam to New York"}}]
+  - user: "Find hotels near the Eiffel Tower."
+    tools: [{tool: places_search, args: {query: "hotels", location: "Eiffel Tower, Paris"}}]
+  - user: "Book the cheapest one for 3 nights."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Paris hotel, 3 nights", amount: 540}}]
+  - user: "What's the weather in Paris?"
+    tools: [{tool: weather_fetch, args: {location: "Paris"}}]
+  - user: "Good bistros in Saint-Germain?"
+    tools: [{tool: places_search, args: {query: "bistro restaurants", location: "Saint-Germain, Paris"}}]
+  - user: "How do I get Louvre tickets?"
+    tools: [{tool: web_search, args: {query: "Louvre tickets"}}]
+  - user: "Now Amsterdam. Hotels in the Jordaan?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Jordaan, Amsterdam"}}]
+  - user: "Book one for 3 nights."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Amsterdam hotel, 3 nights", amount: 510}}]
+  - user: "Anne Frank House tickets?"
+    tools: [{tool: places_search, args: {query: "Anne Frank House tickets", location: "Amsterdam"}}]
+  - user: "Any good canal tours?"
+    tools: [{tool: places_search, args: {query: "canal tours", location: "Amsterdam"}}]
+  - user: "Weather in Amsterdam?"
+    tools: [{tool: weather_fetch, args: {location: "Amsterdam"}}]
+  - user: "Restaurants in De Pijp?"
+    tools: [{tool: places_search, args: {query: "restaurants", location: "De Pijp, Amsterdam"}}]
+  - user: "When should I take the train from Paris to Amsterdam?"
+    tools: [{tool: web_search, args: {query: "train from Paris to Amsterdam"}}]
+
+checks:
+  retained:
+    - id: wednesday_meeting
+      label: "Meeting Wed 2pm, Paris"
+      any: ["meeting[^\\n]{0,40}Wednesday[^\\n]{0,10}2\\s?pm", "Wednesday at 2\\s?pm"]
+    - id: trip_structure
+      label: "3 days Paris, then Amsterdam"
+      any: ["3 (days )?in Paris"]
+  stale: []
+  answer:
+    - id: train_after_meeting
+      type: require_any
+      patterns: ["Thursday", "Wednesday (evening|night)", "after (your|the) (2 ?pm )?meeting"]
+
+judge: >
+  PASS if the reply recommends taking the train after the Wednesday 2pm meeting in
+  Paris: Thursday morning, or Wednesday evening at the earliest. FAIL if it suggests a
+  departure that would miss the meeting, or ignores the meeting entirely.

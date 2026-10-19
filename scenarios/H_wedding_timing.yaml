@@ -1,0 +1,52 @@
+id: H_wedding_timing
+title: The wedding timing
+layer: 3-cross-reference
+description: >
+  Held-out phrasing of the logistics puzzle. A cousin's wedding in Florence is fixed for
+  Saturday at 4pm, and the user lands in Rome on Tuesday. When asked when to take the
+  train to Florence, the agent must schedule it before the wedding.
+
+turns:
+  - user: "I'm visiting Italy for a week. My cousin's wedding is in Florence on Saturday at 4pm, so that's fixed."
+    reply: "How exciting! I'll plan everything around the wedding. Where are you flying from?"
+  - user: "I land in Rome on Tuesday morning. Find flights from New York to Rome."
+    tools: [{tool: web_search, args: {query: "flights from New York to Rome"}}]
+  - user: "Hotels in Rome near Termini?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Termini, Rome"}}]
+  - user: "Book 3 nights, $390."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Rome hotel, 3 nights", amount: 390}}]
+  - user: "What should I see in Rome?"
+    tools: [{tool: places_search, args: {query: "top attractions", location: "Rome"}}]
+  - user: "Weather in Rome this week?"
+    tools: [{tool: weather_fetch, args: {location: "Rome"}}]
+  - user: "Restaurants in Prati?"
+    tools: [{tool: places_search, args: {query: "restaurants", location: "Prati, Rome"}}]
+  - user: "Hotels in Florence near the Duomo?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Duomo, Florence"}}]
+  - user: "Book 2 nights in Florence, $310."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Florence hotel, 2 nights", amount: 310}}]
+  - user: "Weather in Florence?"
+    tools: [{tool: weather_fetch, args: {location: "Florence"}}]
+  - user: "Things to do in Florence?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Florence"}}]
+  - user: "When should I take the train from Rome to Florence?"
+    tools: [{tool: web_search, args: {query: "train from Rome to Florence"}}]
+
+checks:
+  retained:
+    - id: wedding
+      label: "Wedding Sat 4pm, Florence"
+      any: ["wedding[^\\n]{0,60}Saturday", "Saturday at 4\\s?pm"]
+    - id: arrival
+      label: "Lands in Rome Tuesday"
+      any: ["land in Rome on Tuesday"]
+  stale: []
+  answer:
+    - id: before_wedding
+      type: require_any
+      patterns: ["Friday", "Saturday morning", "before (the|your) wedding"]
+
+judge: >
+  PASS if the reply schedules the train so the user reaches Florence before the Saturday
+  4pm wedding (Friday, or Saturday morning at the latest), after the three Rome nights
+  starting Tuesday. FAIL if it ignores the wedding.

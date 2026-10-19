@@ -1,0 +1,55 @@
+id: J_the_callback
+title: The callback
+layer: 3-cross-reference
+description: >
+  The user compares hotels in three neighbourhoods early on, researches for ten more
+  turns, then asks which hotel from "that Shinjuku search earlier" was cheapest. The
+  answer exists only in the turn 3 tool result, so the right detail must be brought back.
+
+turns:
+  - user: "I'm heading to Tokyo for a week. Keep hotels under $130 a night."
+    reply: "Got it: a week in Tokyo, hotels under $130 a night. Where are you flying from?"
+  - user: "Flights from San Francisco to Tokyo?"
+    tools: [{tool: web_search, args: {query: "flights from San Francisco to Tokyo"}}]
+  - user: "Show me hotels in Shinjuku."
+    tools: [{tool: places_search, args: {query: "hotels", location: "Shinjuku, Tokyo"}}]
+  - user: "What about Shibuya?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Shibuya, Tokyo"}}]
+  - user: "And Ginza?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Ginza, Tokyo"}}]
+  - user: "Weather in Tokyo?"
+    tools: [{tool: weather_fetch, args: {location: "Tokyo"}}]
+  - user: "Top attractions in Tokyo?"
+    tools: [{tool: places_search, args: {query: "top attractions", location: "Tokyo"}}]
+  - user: "Things to do in Asakusa?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Asakusa, Tokyo"}}]
+  - user: "Could I do a day trip to Kyoto by train?"
+    tools: [{tool: web_search, args: {query: "train from Tokyo to Kyoto"}}]
+  - user: "Restaurants in Ueno?"
+    tools: [{tool: places_search, args: {query: "restaurants", location: "Ueno, Tokyo"}}]
+  - user: "Is the JR Pass worth it?"
+    tools: [{tool: web_search, args: {query: "is the JR Pass worth it"}}]
+  - user: "Any night markets?"
+    tools: [{tool: places_search, args: {query: "night markets", location: "Tokyo"}}]
+  - user: "Things to do in Ueno?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Ueno, Tokyo"}}]
+  - user: "Which hotel from that Shinjuku search earlier was the cheapest? I'd like to book it."
+
+checks:
+  retained:
+    - id: shinjuku_cheapest
+      label: "Cheapest Shinjuku hotel (turn 3)"
+      any: ["Granite Shinjuku Guesthouse"]
+    - id: price_limit
+      label: "Hotels under $130 a night"
+      any: ["under \\$130 a night"]
+  stale: []
+  answer:
+    - id: names_hotel
+      type: require_any
+      patterns: ["Granite Shinjuku Guesthouse"]
+
+judge: >
+  PASS if the reply identifies Granite Shinjuku Guesthouse ($79/night) from the turn 3
+  Shinjuku search as the cheapest option. FAIL if it names a hotel from another search,
+  invents one, or says it cannot recall.

@@ -1,0 +1,73 @@
+id: B_budget_anchor
+title: The budget anchor
+layer: 1-user-stated
+description: >
+  The budget cap ($2,500) is stated once in turn 1. Over the next turns the user books
+  flights ($800), a Rome hotel ($400) and a Florence hotel ($350). At turn 20 the agent
+  must know about $950 remains and not push a $520/night resort without flagging it.
+
+turns:
+  - user: "Planning a trip to Italy - Rome, Florence, Amalfi Coast. 7 days, max budget $2,500, I'm a solo traveler."
+    reply: "Great plan! Seven days across Rome, Florence and the Amalfi Coast, solo, with a maximum budget of $2,500. Where are you flying from?"
+  - user: "Flying from New York. Find flights to Rome."
+    tools: [{tool: web_search, args: {query: "flights from New York to Rome"}}]
+  - user: "And the return from Rome to New York?"
+    tools: [{tool: web_search, args: {query: "flights from Rome to New York"}}]
+  - user: "Book the round trip, it comes to $800 total."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Round-trip flights NYC-Rome", amount: 800}}]
+  - user: "Show me hotels in Rome, ideally Trastevere."
+    tools: [{tool: places_search, args: {query: "hotels", location: "Trastevere, Rome"}}]
+  - user: "Top things to do in Rome?"
+    tools: [{tool: places_search, args: {query: "top attractions", location: "Rome"}}]
+  - user: "Book a Trastevere hotel for 3 nights, $400 total."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Rome hotel, 3 nights", amount: 400}}]
+  - user: "What's the weather in Rome?"
+    tools: [{tool: weather_fetch, args: {location: "Rome"}}]
+  - user: "How do I get from Rome to Florence?"
+    tools: [{tool: web_search, args: {query: "train from Rome to Florence"}}]
+  - user: "Find hotels in Florence near the Duomo."
+    tools: [{tool: places_search, args: {query: "hotels", location: "Duomo, Florence"}}]
+  - user: "Book a Florence hotel for 2 nights, around $350."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Florence hotel, 2 nights", amount: 350}}]
+  - user: "Good restaurants in Oltrarno?"
+    tools: [{tool: places_search, args: {query: "restaurants", location: "Oltrarno, Florence"}}]
+  - user: "How do I get Uffizi tickets?"
+    tools: [{tool: web_search, args: {query: "Uffizi Gallery tickets"}}]
+  - user: "Weather in Florence?"
+    tools: [{tool: weather_fetch, args: {location: "Florence"}}]
+  - user: "What's the best way to get from Florence to the Amalfi Coast?"
+    tools: [{tool: web_search, args: {query: "train from Florence to Amalfi Coast"}}]
+  - user: "Things to do in Positano?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Positano"}}]
+  - user: "Is the ferry or the bus better along the coast?"
+    tools: [{tool: web_search, args: {query: "ferry vs bus Amalfi Coast"}}]
+  - user: "Any good day trips from Amalfi?"
+    tools: [{tool: places_search, args: {query: "day trips", location: "Amalfi"}}]
+  - user: "What's the weather on the Amalfi Coast?"
+    tools: [{tool: weather_fetch, args: {location: "Amalfi Coast"}}]
+  - user: "Find me a hotel on the Amalfi Coast"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Amalfi Coast"}}]
+
+checks:
+  retained:
+    - id: budget_cap
+      label: "$2,500 budget cap"
+      any: ["budget[^\\n]{0,15}\\$2,?500", "\\$2,?500[^\\n]{0,20}budget"]
+    - id: total_spent
+      label: "Spent so far ($1,550)"
+      any: ["total spent:? \\$1,550"]
+  stale: []
+  answer:
+    - id: no_unflagged_luxury
+      type: forbid_unless
+      forbid: ["Villa Aurelia", "Palazzo Ravello"]
+      unless: ["budget", "remaining", "left", "\\$9[0-9]{2}\\b", "afford"]
+    - id: knows_remaining
+      type: require_any
+      patterns: ["\\$?9[0-9]{2}\\b", "remaining", "left in your budget", "budget"]
+
+judge: >
+  PASS if the reply shows awareness that roughly $950 of the $2,500 budget remains
+  (after $800 flights, $400 Rome hotel, $350 Florence hotel) and recommends hotels
+  accordingly, or flags budget tension for expensive options. FAIL if it suggests a
+  $400+/night luxury hotel with no mention of the budget.

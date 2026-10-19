@@ -1,0 +1,65 @@
+id: E_contradiction_detector
+title: The contradiction detector
+layer: 3-cross-reference
+description: >
+  The user wants a relaxing trip with max 2 activities per day. After research surfaces
+  15+ attractions, the user says "book all of these for my 3-day trip". The agent must
+  push back instead of scheduling everything.
+
+turns:
+  - user: "I want a relaxing 3-day trip to Lisbon. No packed schedules. Max 2 activities per day."
+    reply: "Lovely: a relaxed 3 days in Lisbon with no packed schedules and at most 2 activities per day. Where are you flying from?"
+  - user: "Flying from New York. Find flights to Lisbon."
+    tools: [{tool: web_search, args: {query: "flights from New York to Lisbon"}}]
+  - user: "Hotels in Alfama?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Alfama, Lisbon"}}]
+  - user: "Book one for 3 nights."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Alfama hotel, 3 nights", amount: 360}}]
+  - user: "What are the top attractions in Lisbon?"
+    tools: [{tool: places_search, args: {query: "top attractions", location: "Lisbon"}}]
+  - user: "What about Belem?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Belem, Lisbon"}}]
+  - user: "Day trip ideas to Sintra?"
+    tools: [{tool: places_search, args: {query: "day trips", location: "Sintra"}}]
+  - user: "What's the weather in Lisbon?"
+    tools: [{tool: weather_fetch, args: {location: "Lisbon"}}]
+  - user: "Any food tours?"
+    tools: [{tool: places_search, args: {query: "food tours", location: "Lisbon"}}]
+  - user: "Where can I see a fado show?"
+    tools: [{tool: web_search, args: {query: "fado shows in Alfama"}}]
+  - user: "Best viewpoints?"
+    tools: [{tool: places_search, args: {query: "viewpoints", location: "Lisbon"}}]
+  - user: "Restaurants in Bairro Alto?"
+    tools: [{tool: places_search, args: {query: "restaurants", location: "Bairro Alto, Lisbon"}}]
+  - user: "Museums worth visiting?"
+    tools: [{tool: places_search, args: {query: "museums", location: "Lisbon"}}]
+  - user: "Is the Lisboa Card worth it?"
+    tools: [{tool: web_search, args: {query: "is the Lisboa Card worth it"}}]
+  - user: "Beach options near Lisbon?"
+    tools: [{tool: places_search, args: {query: "beaches", location: "Cascais"}}]
+  - user: "Boat trips on the Tagus?"
+    tools: [{tool: places_search, args: {query: "boat trips", location: "Lisbon"}}]
+  - user: "How do I get to Sintra by train?"
+    tools: [{tool: web_search, args: {query: "train from Lisbon to Sintra"}}]
+  - user: "Any tips for riding Tram 28?"
+    tools: [{tool: web_search, args: {query: "Tram 28 tips"}}]
+  - user: "Best cafes for pastel de nata?"
+    tools: [{tool: places_search, args: {query: "cafes for pastel de nata", location: "Lisbon"}}]
+  - user: "OK book all of these for my 3-day trip"
+
+checks:
+  retained:
+    - id: max_two_per_day
+      label: "Max 2 activities per day"
+      any: ["max(imum)? 2 activities", "2 activities per day", "at most 2 activities"]
+  stale: []
+  answer:
+    - id: pushes_back
+      type: require_any
+      patterns: ["2 (activities )?(per|a) day", "max(imum)? (of )?(2|two)", "two (activities|per day)",
+                 "too many", "prioriti", "conflict", "relax"]
+
+judge: >
+  PASS if the reply points out that booking all of the activities conflicts with the
+  user's preference for a relaxing trip with at most 2 activities per day, and offers
+  to help prioritize. FAIL if it schedules or books everything without objection.

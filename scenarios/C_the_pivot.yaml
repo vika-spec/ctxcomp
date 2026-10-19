@@ -1,0 +1,83 @@
+id: C_the_pivot
+title: The pivot
+layer: 2-stale-invalidation
+description: >
+  Five turns of heavy Bali research, then the user cancels Bali entirely and switches
+  to Switzerland. After 18 turns of Switzerland planning, the trip summary must contain
+  zero Bali references.
+
+turns:
+  - user: "Plan me a beach vacation in Bali for next month."
+    reply: "A beach vacation in Bali sounds wonderful! Let's start with flights. Where are you flying from?"
+  - user: "Find flights from San Francisco to Bali."
+    tools: [{tool: web_search, args: {query: "flights from San Francisco to Bali"}}]
+  - user: "Show me beach resorts in Seminyak."
+    tools: [{tool: places_search, args: {query: "beach resorts", location: "Seminyak, Bali"}}]
+  - user: "I'd love surf lessons. What's available in Kuta?"
+    tools: [{tool: places_search, args: {query: "surf lessons", location: "Kuta, Bali"}}]
+  - user: "Any temple tours around Ubud?"
+    tools: [{tool: places_search, args: {query: "temple tours", location: "Ubud, Bali"}}]
+  - user: "What's the weather like in Bali next month?"
+    tools: [{tool: weather_fetch, args: {location: "Bali"}}]
+  - user: "Actually, scratch Bali entirely. Let's do Switzerland instead - I want mountains, not beaches."
+    reply: "No problem! Switzerland it is: mountains instead of beaches. Let's start with flights to Zurich."
+  - user: "Find flights from San Francisco to Zurich."
+    tools: [{tool: web_search, args: {query: "flights from San Francisco to Zurich"}}]
+  - user: "Hotels in Zermatt?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Zermatt"}}]
+  - user: "What's there to do in Zermatt?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Zermatt"}}]
+  - user: "How do I get from Zurich to Zermatt?"
+    tools: [{tool: web_search, args: {query: "train from Zurich to Zermatt"}}]
+  - user: "Weather in Zermatt?"
+    tools: [{tool: weather_fetch, args: {location: "Zermatt"}}]
+  - user: "Let's also see Interlaken. Hotels there?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Interlaken"}}]
+  - user: "Outdoor activities in Interlaken?"
+    tools: [{tool: places_search, args: {query: "outdoor activities", location: "Interlaken"}}]
+  - user: "Train from Zermatt to Interlaken?"
+    tools: [{tool: web_search, args: {query: "train from Zermatt to Interlaken"}}]
+  - user: "Is the Swiss Travel Pass worth it?"
+    tools: [{tool: web_search, args: {query: "is the Swiss Travel Pass worth it"}}]
+  - user: "Book the cheapest Zermatt hotel for 3 nights."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Zermatt hotel, 3 nights", amount: 690}}]
+  - user: "Book an Interlaken hotel for 2 nights."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Interlaken hotel, 2 nights", amount: 420}}]
+  - user: "Hotels in Lucerne for the last night?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Lucerne"}}]
+  - user: "What can we do in Lucerne?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Lucerne"}}]
+  - user: "Restaurants in Lucerne's Old Town?"
+    tools: [{tool: places_search, args: {query: "restaurants", location: "Old Town, Lucerne"}}]
+  - user: "Train from Interlaken to Lucerne?"
+    tools: [{tool: web_search, args: {query: "train from Interlaken to Lucerne"}}]
+  - user: "Weather in Lucerne?"
+    tools: [{tool: weather_fetch, args: {location: "Lucerne"}}]
+  - user: "Book the flights to Zurich."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Flights SFO-Zurich round trip", amount: 980}}]
+  - user: "How do I get from Lucerne to Zurich airport?"
+    tools: [{tool: web_search, args: {query: "train from Lucerne to Zurich"}}]
+  - user: "Summarize my trip plan so far."
+
+checks:
+  retained:
+    - id: mountains_preference
+      label: "Mountains, not beaches"
+      any: ["mountains, not beaches"]
+  stale:
+    - id: bali_research
+      label: "Cancelled Bali research"
+      after_turn: 7
+      any: ["Seminyak", "Samudra Beach Resort", "Kuta Surf", "Ubud Water Temple", "Uluwatu"]
+  answer:
+    - id: no_bali_leakage
+      type: forbid
+      patterns: ["\\bBali\\b", "Seminyak", "Ubud", "Kuta", "\\bsurf", "beach resort"]
+    - id: is_switzerland
+      type: require_any
+      patterns: ["Switzerland", "Zermatt", "Interlaken", "Lucerne", "Zurich"]
+
+judge: >
+  PASS if the summary describes only the Switzerland trip and contains no reference to
+  Bali or anything researched for Bali (beaches, surf lessons, temples, Seminyak,
+  Ubud, Kuta). FAIL on any Bali leakage.

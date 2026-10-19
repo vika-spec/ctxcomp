@@ -1,0 +1,17 @@
+[project]
+name = "ctxcomp"
+version = "0.1.0"
+description = "Context compression for tool-using AI agents, with a trip-planning test bed and evaluation harness"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["pyyaml>=6.0", "requests>=2.31"]
+
+[project.scripts]
+ctxcomp = "ctxcomp.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ctxcomp*"]

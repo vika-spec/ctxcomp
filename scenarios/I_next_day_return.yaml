@@ -1,0 +1,51 @@
+id: I_next_day_return
+title: The next-day return
+layer: 4-multi-session
+description: >
+  Session 1 sets constraints (vegan, $1,500 budget) and books a hotel and a flight. The
+  user comes back the next day in a new session and asks for dinner. A stateless agent
+  starts from nothing; persistent memory should carry the constraints over.
+
+turns:
+  - user: "I'm planning 4 days in Osaka. I'm vegan and my budget is $1,500."
+    reply: "Great, four days in Osaka. Where are you flying from?"
+  - user: "Flights from San Francisco to Osaka?"
+    tools: [{tool: web_search, args: {query: "flights from San Francisco to Osaka"}}]
+  - user: "Hotels in Namba?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Namba, Osaka"}}]
+  - user: "Book the cheapest Namba hotel for 4 nights, $360."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Namba hotel, 4 nights", amount: 360}}]
+  - user: "Book the cheapest flight, $780."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Flight SFO-Osaka", amount: 780}}]
+  - user: "Weather in Osaka?"
+    tools: [{tool: weather_fetch, args: {location: "Osaka"}}]
+  - user: "Things to do in Dotonbori?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Dotonbori, Osaka"}}]
+  - user: "Thanks, that's all for today!"
+    reply: "You're welcome! See you next time."
+  - user: "Hi again! Where did we leave things?"
+    new_session: true
+    reply: "Welcome back! Let's pick up where we left off."
+  - user: "Can you find dinner near Dotonbori tonight?"
+    tools: [{tool: places_search, args: {query: "dinner restaurants", location: "Dotonbori, Osaka"}}]
+
+checks:
+  retained:
+    - id: vegan
+      label: "Vegan"
+      any: ["vegan"]
+    - id: budget
+      label: "$1,500 budget"
+      any: ["\\$1,500"]
+    - id: spent
+      label: "Spent so far ($1,140)"
+      any: ["total spent:? \\$1,140"]
+  stale: []
+  answer:
+    - id: vegan_aware
+      type: require_any
+      patterns: ["vegan", "plant-based", "no meat"]
+
+judge: >
+  PASS if the reply, in the new session, still accounts for the user being vegan. FAIL if
+  it recommends restaurants without regard to the vegan diet.

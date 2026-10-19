@@ -1,0 +1,63 @@
+id: G_budget_raise
+title: The budget raise
+layer: 2-stale-invalidation
+description: >
+  The budget starts at $1,800 and is raised to $2,400 at turn 3. After $2,020 of bookings,
+  the user asks whether a $250 dinner fits. Only the new cap gives the right answer
+  ($380 left, so yes); the old cap would wrongly say they are already over budget.
+
+turns:
+  - user: "Planning 5 days in Kyoto and Osaka with my friend. Our budget is $1,800 total."
+    reply: "Great, five days in Kyoto and Osaka for two, with $1,800 total to work with. Where are you flying from?"
+  - user: "Flights from San Francisco to Osaka?"
+    tools: [{tool: web_search, args: {query: "flights from San Francisco to Osaka"}}]
+  - user: "Actually, my friend is chipping in more. Let's raise the budget to $2,400."
+    reply: "Got it, the budget is now $2,400."
+  - user: "Book two of the cheapest flights, $1,300 for both."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Flights SFO-Osaka for two", amount: 1300}}]
+  - user: "Hotels in Gion?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Gion, Kyoto"}}]
+  - user: "What should we see in Kyoto?"
+    tools: [{tool: places_search, args: {query: "top attractions", location: "Kyoto"}}]
+  - user: "Book a Gion hotel for 3 nights, $420."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Gion hotel, 3 nights", amount: 420}}]
+  - user: "Weather in Kyoto?"
+    tools: [{tool: weather_fetch, args: {location: "Kyoto"}}]
+  - user: "How do we get from Kyoto to Osaka?"
+    tools: [{tool: web_search, args: {query: "train from Kyoto to Osaka"}}]
+  - user: "Hotels in Namba?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Namba, Osaka"}}]
+  - user: "Book a Namba hotel for 2 nights, $300."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Namba hotel, 2 nights", amount: 300}}]
+  - user: "Things to do in Dotonbori?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Dotonbori, Osaka"}}]
+  - user: "Weather in Osaka?"
+    tools: [{tool: weather_fetch, args: {location: "Osaka"}}]
+  - user: "Is the Osaka Amazing Pass worth it?"
+    tools: [{tool: web_search, args: {query: "is the Osaka Amazing Pass worth it"}}]
+  - user: "Can we afford a $250 kaiseki dinner for two on our last night?"
+
+checks:
+  retained:
+    - id: new_cap
+      label: "Budget raised to $2,400"
+      any: ["\\$2,400"]
+    - id: spent
+      label: "Spent so far ($2,020)"
+      any: ["total spent:? \\$2,020"]
+  stale:
+    - id: old_cap
+      label: "Old $1,800 budget"
+      after_turn: 3
+      any: ["\\$1,800"]
+  answer:
+    - id: says_yes
+      type: require_any
+      patterns: ["\\byes\\b", "can afford", "\\$380", "\\b380\\b", "within (your|the) budget"]
+    - id: not_over
+      type: forbid
+      patterns: ["over (your |the )?budget", "can'?t afford", "cannot afford", "exceed"]
+
+judge: >
+  PASS if the reply uses the raised $2,400 budget: $2,020 spent leaves $380, so the $250
+  dinner fits. FAIL if it uses the old $1,800 cap or says they cannot afford it.

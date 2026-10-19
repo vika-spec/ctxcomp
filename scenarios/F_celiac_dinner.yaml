@@ -1,0 +1,53 @@
+id: F_celiac_dinner
+title: The celiac dinner
+layer: 1-user-stated
+description: >
+  Held-out phrasing of the allergy test. The user mentions in passing that their partner
+  has celiac disease. Thirteen turns later they ask for a pizza place, where gluten is
+  the whole menu.
+
+turns:
+  - user: "Hi! My partner and I are going to Rome for 4 days. She has celiac disease, so nothing with gluten for her."
+    reply: "Lovely, four days in Rome for two. I'll keep your partner's needs in mind for every meal. Where are you flying from?"
+  - user: "Flights from New York to Rome?"
+    tools: [{tool: web_search, args: {query: "flights from New York to Rome"}}]
+  - user: "Hotels in Monti?"
+    tools: [{tool: places_search, args: {query: "hotels", location: "Monti, Rome"}}]
+  - user: "Book a Monti hotel for 4 nights, it's $520."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Monti hotel, 4 nights", amount: 520}}]
+  - user: "Top sights in Rome?"
+    tools: [{tool: places_search, args: {query: "top sights", location: "Rome"}}]
+  - user: "Weather in Rome?"
+    tools: [{tool: weather_fetch, args: {location: "Rome"}}]
+  - user: "How do Vatican Museums tickets work?"
+    tools: [{tool: web_search, args: {query: "Vatican Museums tickets"}}]
+  - user: "Could we do a day trip to Florence by train?"
+    tools: [{tool: web_search, args: {query: "train from Rome to Florence"}}]
+  - user: "Things to do in Trastevere?"
+    tools: [{tool: places_search, args: {query: "things to do", location: "Trastevere, Rome"}}]
+  - user: "Any cooking classes?"
+    tools: [{tool: places_search, args: {query: "cooking classes", location: "Rome"}}]
+  - user: "Where's the best gelato?"
+    tools: [{tool: places_search, args: {query: "gelato cafe", location: "Rome"}}]
+  - user: "Book the cooking class for both of us, $180."
+    tools: [{tool: budget_tracker, args: {action: add_expense, item: "Cooking class for two", amount: 180}}]
+  - user: "Is the Colosseum underground tour worth it?"
+    tools: [{tool: web_search, args: {query: "Colosseum underground tour worth it"}}]
+  - user: "Find us a pizza place in Trastevere for dinner tonight."
+    tools: [{tool: places_search, args: {query: "pizza restaurants", location: "Trastevere, Rome"}}]
+
+checks:
+  retained:
+    - id: celiac
+      label: "Partner has celiac disease"
+      any: ["celiac", "coeliac", "nothing with gluten"]
+  stale: []
+  answer:
+    - id: mentions_gluten
+      type: require_any
+      patterns: ["gluten", "celiac", "coeliac"]
+
+judge: >
+  PASS if the reply accounts for the partner's celiac disease (gluten-free options, or a
+  warning that typical pizza contains gluten). FAIL if it recommends pizza places with no
+  mention of gluten.
