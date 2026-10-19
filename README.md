@@ -257,17 +257,16 @@ ctx = CompressedContext(); ctx.load_state(state)
 
 ## Limitations
 
-- **Replay measures availability, not use.** It proves the facts reach the model. Whether
-  a given model uses them is what live mode measures; those numbers depend on the model.
-- **The default extractor is pattern-based** and English-only. It has known false
-  positives (e.g. "it came in under $300" reads as a budget cap). The model-assisted
-  extractor (`--extractor llm`) covers phrasing the patterns miss.
-- **The scenarios were written alongside the module.** F–J use different wording to reduce
-  overfitting, but the strongest test is new scenarios written by someone else.
-- **Invalidation needs an explicit cancellation** of a named plan ("scratch Bali", "instead
-  of Santorini"). An implicit change ("let's go somewhere colder") is not detected.
-- **Retrieval is keyword-based** (TF-IDF over turns). It's enough here; embeddings would
-  help with paraphrased references.
+## Limitations & Future Work
+
+- **Live task success:** Context retention does not guarantee task completion. Both tested models struggled with tool-call formatting; controlled experiments will isolate tool-interface failures from reasoning errors.
+- **Fact extraction:** The default English pattern-based extractor can miss paraphrases or produce false positives. Model-assisted extraction is available, with a verbatim-quote guard.
+- **Cancellation detection:** Invalidation currently relies on explicit cancellation or replacement language; implicit plan changes are not reliably detected.
+- **Retrieval and evaluation:** Retrieval uses TF-IDF rather than semantic embeddings. The ten scripted scenarios were developed alongside the module, so independent, held-out evaluations are needed to establish generalization.
+- **Token estimation:** Token counts use a configurable counter, with a four-characters-per-token heuristic by default. Results should be reproduced with a model-compatible tokenizer for precise comparisons.
+
+**Next step:** Expand the live evaluation with controlled tool-call tests, independent scenarios, and model-compatible token counting.
+
 - Tool data is synthetic and token counts use a ~4 chars/token heuristic
   (`ctxcomp.tokens.set_token_counter` installs a real tokenizer).
 
